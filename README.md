@@ -81,9 +81,9 @@
   - Discord global commands can take up to 1h to update due to caching. If you don't want to wait, send `@bot !deploy guild` in a text channel the bot can see (`@bot` being you @mentionning your bot). This will deploy the commands immediately in that guild.
   - If you see every command twice, just send `@bot !undeploy guild`!
 
-- By default, the bot doesn't store your username/password, it only uses them to get the cookies that can be used to generate access tokens needed to get your shop.  
-  - Your cookies are only stored on your hard drive, and are only ever sent to official Riot servers.
-  - You can log in using your [cookies](https://github.com/giorgi-o/SkinPeek/wiki/How-to-get-your-Riot-cookies) using `/cookies` to avoid sending your password, and you can delete your account from the bot anytime using `/forget`.  
+- The bot doesn't store your username/password. Instead, it uses a secure web-based login flow using the `/login` command to authenticate with Riot servers.
+  - Your access and refresh tokens are stored locally on your hard drive, and are never shared with third parties.
+  - You can easily delete your account from the bot's database anytime using the `/forget` command.  
 
 - Once you're more or less familiar with how the bot works, you should read the [Admin Guide](https://github.com/giorgi-o/SkinPeek/wiki/SkinPeek-Admin-Guide) for advanced usage and tips & tricks for hosting the bot.
 
