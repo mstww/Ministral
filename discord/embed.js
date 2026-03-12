@@ -6,6 +6,7 @@ import {
     getSkinFromSkinUuid,
     getSpray,
     getTitle,
+    getFlex,
     getWeapon
 } from "../valorant/cache.js";
 import {
@@ -189,6 +190,9 @@ export const renderAccessoryOffers = async (shop, interaction, valorantUser, KCe
                     break;
                 case "de7caa6b-adf7-4588-bbd1-143831e786c6": //titles
                     embeds.push(await titleEmbed(reward.ItemID, offer.cost, interaction, KCemoji))
+                    break;
+                case "03a572de-4234-31ed-d344-ababa488f981": //flexes
+                    embeds.push(await flexEmbed(reward.ItemID, offer.cost, interaction, KCemoji))
                     break;
                 default:
                     console.log(reward.ItemTypeID);
@@ -605,6 +609,20 @@ const cardEmbed = async (uuid, price, locale, emojiString) => {
     }
 }
 
+const flexEmbed = async (uuid, price, locale, emojiString) => {
+    const flex = await getFlex(uuid);
+    return {
+        title: l(flex.names, locale),
+        url: config.linkItemImage ? flex.icon : null,
+        description: priceDescription(emojiString, price),
+        color: VAL_COLOR_2,
+        thumbnail: {
+            url: flex.icon
+        }
+    }
+}
+
+
 const sprayEmbed = async (uuid, price, locale, emojiString) => {
     const spray = await getSpray(uuid);
     return {
@@ -626,6 +644,7 @@ const titleEmbed = async (uuid, price, locale, emojiString) => {
         color: VAL_COLOR_2,
     }
 }
+
 
 export const skinCollectionSingleEmbed = async (interaction, id, user, { loadout, favorites }) => {
     const someoneElseUsedCommand = interaction.message ?

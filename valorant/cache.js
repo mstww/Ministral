@@ -9,7 +9,7 @@ import { sendShardMessage } from "../misc/shardMessage.js";
 const formatVersion = 14;
 let gameVersion;
 
-let weapons, skins, rarities, buddies, sprays, cards, titles, bundles, battlepass;
+let weapons, skins, rarities, buddies, sprays, cards, titles, bundles, battlepass, flexes;
 let prices = { timestamp: null };
 
 // Inverted index: uuid → price, built from bundle items for O(1) fallback in getPrice()
@@ -34,7 +34,7 @@ let versionFetchPromise = null;
 let fetchDataPromise = null;
 
 export const clearCache = () => {
-    weapons = skins = rarities = buddies = sprays = cards = titles = bundles = battlepass = null;
+    weapons = skins = rarities = buddies = sprays = cards = titles = bundles = battlepass = flexes = null;
     prices = { timestamp: null };
     allSkinsCache = null;
     bundleItemPrices = {};
@@ -82,6 +82,7 @@ export const loadSkinsJSON = async (filename = "data/skins.json") => {
     rarities = jsonData.rarities;
     bundles = jsonData.bundles;
     buddies = jsonData.buddies;
+    flexes = jsonData.flexes;
     sprays = jsonData.sprays;
     cards = jsonData.cards;
     titles = jsonData.titles;
@@ -89,7 +90,7 @@ export const loadSkinsJSON = async (filename = "data/skins.json") => {
     buildBundleItemPrices();
 
     // Re-set the fast-path flag now that all fields are consistent
-    if (skins && prices && bundles && rarities && buddies && cards && sprays && titles && battlepass) {
+    if (skins && prices && bundles && rarities && buddies && flexes && cards && sprays && titles && battlepass) {
         dataFullyLoaded = true;
     }
 }
@@ -99,7 +100,7 @@ export const saveSkinsJSON = (filename = "data/skins.json") => {
     if (dir && !fs.existsSync(dir)) {
         fs.mkdirSync(dir, { recursive: true });
     }
-    fs.writeFileSync(filename, JSON.stringify({ formatVersion, gameVersion, weapons, skins, prices, bundles, rarities, buddies, sprays, cards, titles, battlepass }, null, 2));
+    fs.writeFileSync(filename, JSON.stringify({ formatVersion, gameVersion, weapons, skins, prices, bundles, rarities, buddies, flexes, sprays, cards, titles, battlepass }, null, 2));
     skinsSaveDirty = false;
     
     sendShardMessage({ type: "skinsReload" });
@@ -170,6 +171,7 @@ const _fetchDataImpl = async (types = null, checkVersion = false) => {
         if (types.includes(sprays) && (!sprays || sprays.version !== gameVersion)) promises.push(getSprays(gameVersion));
         if (types.includes(titles) && (!titles || titles.version !== gameVersion)) promises.push(getTitles(gameVersion));
         if (types.includes(battlepass) && (!battlepass || battlepass.version !== gameVersion)) promises.push(fetchBattlepassInfo(gameVersion));
+        if (types.includes(flexes) && (!flexes || flexes.version !== gameVersion)) promises.push(getFlexes(gameVersion));
 
         // Removed: 24h price refresh - prices now collected gradually from shop/bundle data
 
@@ -496,6 +498,25 @@ export const getBuddies = async (gameVersion) => {
     // saveSkinsJSON() deferred to fetchData() caller
 }
 
+export const getFlexes = async (gameVersion) => {
+    console.log("Fetching flex list...");
+
+    const req = await fetch("https://valorant-api.com/v1/flex?language=all");
+    console.assert(req.statusCode === 200, `Valorant flex status code is ${req.statusCode}!`, req);
+
+    const json = JSON.parse(req.body);
+    console.assert(json.status === 200, `Valorant flex data status code is ${json.status}!`, json);
+
+    flexes = { version: gameVersion };
+    for (const flex of json.data) {
+        flexes[flex.uuid] = {
+            uuid: flex.uuid,
+            names: flex.displayName,
+            icon: flex.displayIcon
+        }
+    }
+}
+
 export const getCards = async (gameVersion) => {
     console.log("Fetching player cards list...");
 
@@ -744,6 +765,11 @@ export const searchBundle = async (query, locale, limit = 20, threshold = -1000)
 export const getBuddy = async (uuid) => {
     if (!buddies) await fetchData([buddies]);
     return buddies[uuid];
+}
+
+export const getFlex = async (uuid) => {
+    if (!flexes) await fetchData([flexes]);
+    return flexes[uuid];
 }
 
 export const getSpray = async (uuid) => {
