@@ -13,6 +13,7 @@ export const discToValLang = {
     'en-GB': 'en-US', // :(
     'en-US': 'en-US',
     'es-ES': 'es-ES',
+    'es-419': 'es-MX',
     'fr'   : 'fr-FR',
     'it'   : 'it-IT',
     'pl'   : 'pl-PL',
@@ -25,11 +26,10 @@ export const discToValLang = {
     'ja'   : 'ja-JP',
     'zh-TW': 'zh-TW',
     'ko'   : 'ko-KR',
+    'id'   : 'id-ID',
 
     // valorant languages, that discord doesn't support
-    'ar-AE': 'ar-AE',
-    'es-MX': 'es-MX',
-    'id-ID': 'id-ID'
+    'ar-AE': 'ar-AE'
 }
 
 export const valToDiscLang = {};
@@ -38,10 +38,11 @@ Object.keys(discToValLang).forEach(discLang => {
 });
 
 export const discLanguageNames = {
-    'de'   : '🇳🇱 Deutsch',
+    'de'   : '🇩🇪 Deutsch',
     'en-GB': '🇬🇧 English (UK)',
     'en-US': '🇺🇸 English (US)',
     'es-ES': '🇪🇸 Español',
+    'es-419': '🇲🇽 Español (Latinoamérica)',
     'fr'   : '🇫🇷 Français',
     'it'   : '🇮🇹 Italiano',
     'pl'   : '🇵🇱 Polski',
@@ -54,11 +55,10 @@ export const discLanguageNames = {
     'ja'   : '🇯🇵 日本語',
     'zh-TW': '🇹🇼 繁體中文',
     'ko'   : '🇰🇷 한국어',
+    'id'   : '🇮🇩 Bahasa Indonesia',
 
     // valorant languages, that discord doesn't support
     'ar-AE': '🇸🇦 العربية',
-    'es-MX': '🇲🇽 Español (México)',
-    'id-ID': '🇮🇩 Bahasa Indonesia',
 
     // languages that neither discord nor valorant support
     'tl-PH': '🇵🇭 Tagalog',
