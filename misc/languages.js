@@ -4,7 +4,7 @@ import {getSetting} from "./settings.js";
 import {getUser, User} from "../valorant/auth.js";
 import config from "./config.js";
 
-// languages valorant doesn't have:
+// languages valorant doesn't have (fetch skins in en-US):
 // danish, croatian, lithuanian, hungarian, dutch, norwegian, romanian, finnish, swedish, czech, greek, bulgarian, ukranian, hindi
 // languages discord doesn't have:
 // arabic, mexican spanish, indonesian
@@ -27,6 +27,22 @@ export const discToValLang = {
     'zh-TW': 'zh-TW',
     'ko'   : 'ko-KR',
     'id'   : 'id-ID',
+
+    // Discord locales that Valorant doesn't have
+    'da'   : 'en-US',
+    'hr'   : 'en-US',
+    'lt'   : 'en-US',
+    'hu'   : 'en-US',
+    'nl'   : 'en-US',
+    'no'   : 'en-US',
+    'ro'   : 'en-US',
+    'fi'   : 'en-US',
+    'sv-SE': 'en-US',
+    'cs'   : 'en-US',
+    'el'   : 'en-US',
+    'bg'   : 'en-US',
+    'uk'   : 'en-US',
+    'hi'   : 'en-US',
 
     // valorant languages, that discord doesn't support
     'ar-AE': 'ar-AE'
@@ -56,6 +72,22 @@ export const discLanguageNames = {
     'zh-TW': '🇹🇼 繁體中文',
     'ko'   : '🇰🇷 한국어',
     'id'   : '🇮🇩 Bahasa Indonesia',
+
+    // Discord locales that Valorant doesn't have
+    'da'   : '🇩🇰 Dansk',
+    'hr'   : '🇭🇷 Hrvatski',
+    'lt'   : '🇱🇹 Lietuvių',
+    'hu'   : '🇭🇺 Magyar',
+    'nl'   : '🇳🇱 Nederlands',
+    'no'   : '🇳🇴 Norsk',
+    'ro'   : '🇷🇴 Română',
+    'fi'   : '🇫🇮 Suomi',
+    'sv-SE': '🇸🇪 Svenska',
+    'cs'   : '🇨🇿 Čeština',
+    'el'   : '🇬🇷 Ελληνικά',
+    'bg'   : '🇧🇬 Български',
+    'uk'   : '🇺🇦 Українська',
+    'hi'   : '🇮🇳 हिन्दी',
 
     // valorant languages, that discord doesn't support
     'ar-AE': '🇸🇦 العربية',
