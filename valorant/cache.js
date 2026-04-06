@@ -507,6 +507,7 @@ export const addBundleData = async (bundleData) => {
         
         // IF API UPDATED (RESOLVED THE UNKNOWN BUNDLE):
         if (isUnknown && isNowKnown) {
+            dataFullyLoaded = false;
             console.log("[getBundle] API updated! Forcing version mismatch to fetch cosmetics...");
             if (skins) skins.version = "force_update";
             if (rarities) rarities.version = "force_update";
@@ -516,7 +517,7 @@ export const addBundleData = async (bundleData) => {
             if (titles) titles.version = "force_update";
             if (flexes) flexes.version = "force_update";
 
-            await fetchData();
+            await fetchData(null, true);
         }
         
         if (updatedBundle) bundle = updatedBundle;
@@ -855,6 +856,7 @@ export const getBundle = async (uuid) => {
         let isNowKnown = updatedBundle && updatedBundle.names && !updatedBundle.names["en-US"].startsWith("Unknown Bundle");
         
         if (isUnknown && isNowKnown) {
+            dataFullyLoaded = false;
             console.log("[getBundle] API updated! Forcing version mismatch to fetch cosmetics...");
             if (skins) skins.version = "force_update";
             if (rarities) rarities.version = "force_update";
@@ -864,7 +866,7 @@ export const getBundle = async (uuid) => {
             if (titles) titles.version = "force_update";
             if (flexes) flexes.version = "force_update";
             
-            await fetchData();
+            await fetchData(null, true);
         }
         
         if (updatedBundle) bundle = updatedBundle;
