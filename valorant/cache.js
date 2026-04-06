@@ -449,30 +449,73 @@ const getBundleList = async (gameVersion) => {
     const json = JSON.parse(req.body);
     console.assert(json.status === 200, `Valorant bundles data status code is ${json.status}!`, json);
 
+    const oldBundles = bundles || {};
     bundles = { version: gameVersion };
-    bundleItemPrices = {}; // items are all null at this point; index rebuilt via addBundleData()
+    bundleItemPrices = {}; 
+
     for (const bundle of json.data) {
+        const existing = oldBundles[bundle.uuid];
         bundles[bundle.uuid] = {
             uuid: bundle.uuid,
             names: bundle.displayName,
             subNames: bundle.displayNameSubText,
             descriptions: bundle.extraDescription,
             icon: bundle.displayIcon,
-            items: null,
-            price: null,
-            basePrice: null,
-            expires: null,
-            last_seen: null
+            items: existing ? existing.items : null,
+            price: existing ? existing.price : null,
+            basePrice: existing ? existing.basePrice : null,
+            expires: existing ? existing.expires : null,
+            last_seen: existing ? existing.last_seen : null
+        }
+
+        // Rebuild price index
+        if (bundles[bundle.uuid].items) {
+            for (const item of bundles[bundle.uuid].items) {
+                if (item.uuid && item.price) bundleItemPrices[item.uuid] = item.price;
+            }
         }
     }
 
-    // saveSkinsJSON() deferred to fetchData() caller
+    // Restore "Unknown Bundles" that aren't yet in the API
+    for (const [uuid, b] of Object.entries(oldBundles)) {
+        if (uuid !== "version" && !bundles[uuid]) {
+            bundles[uuid] = b;
+            
+            if (b.items) {
+                for (const item of b.items) {
+                    if (item.uuid && item.price) bundleItemPrices[item.uuid] = item.price;
+                }
+            }
+        }
+    }
 }
 
 export const addBundleData = async (bundleData) => {
     await fetchData([bundles]);
 
     let bundle = bundles[bundleData.uuid];
+    let isUnknown = bundle && bundle.names && bundle.names["en-US"] && bundle.names["en-US"].startsWith("Unknown Bundle");
+
+    if ((!bundle || isUnknown) && (Date.now() - lastBundleFetch > 60 * 60 * 1000)) {
+        console.log(`[addBundleData] Bundle ${bundleData.uuid} missing or unknown. Refetching bundles...`);
+        
+        await getBundleList(gameVersion || bundles.version);
+        lastBundleFetch = Date.now();
+        
+        let updatedBundle = bundles[bundleData.uuid];
+        let isNowKnown = updatedBundle && updatedBundle.names && !updatedBundle.names["en-US"].startsWith("Unknown Bundle");
+        
+        // IF API UPDATED (RESOLVED THE UNKNOWN BUNDLE):
+        if (isUnknown && isNowKnown) {
+            console.log("[addBundleData] API updated! Bundle resolved. Refetching all cosmetics (buddies, cards, flexes, etc.)...");
+            skins = rarities = buddies = cards = sprays = titles = flexes = null;
+            dataFullyLoaded = false;
+            await fetchData();
+        }
+        
+        if (updatedBundle) bundle = updatedBundle;
+    }
+
     if (!bundle) {
         bundle = {
             uuid: bundleData.uuid,
@@ -488,6 +531,8 @@ export const addBundleData = async (bundleData) => {
         };
         bundles[bundleData.uuid] = bundle;
         console.log(`Created skeleton for unrecognized bundle ${bundleData.uuid}`);
+    } else if (isUnknown && bundle.names && !bundle.names["en-US"].startsWith("Unknown Bundle")) {
+        console.log(`Successfully resolved unknown bundle ${bundleData.uuid}`);
     }
 
     bundle.items = bundleData.items.map(item => {
@@ -504,7 +549,6 @@ export const addBundleData = async (bundleData) => {
     bundle.basePrice = bundleData.basePrice;
     bundle.expires = bundleData.expires;
 
-    // Update inverted price index for this bundle's items
     for (const item of bundle.items) {
         if (item.uuid && item.price) bundleItemPrices[item.uuid] = item.price;
     }
@@ -790,17 +834,31 @@ export const searchSkin = async (query, locale, limit = 20, threshold = -5000) =
 
 export const getBundle = async (uuid) => {
     await fetchData([bundles]);
-    if (bundles[uuid]) return bundles[uuid];
+    
+    let bundle = bundles[uuid];
+    let isUnknown = bundle && bundle.names && bundle.names["en-US"] && bundle.names["en-US"].startsWith("Unknown Bundle");
+
+    if (bundle && !isUnknown) return bundle;
 
     if (Date.now() - lastBundleFetch > 60 * 60 * 1000) {
-        // UUID not in cache — bundle list is likely stale (new Riot bundle). Force a re-fetch.
-        console.log(`[getBundle] UUID ${uuid} not found in bundle cache, forcing re-fetch...`);
-        bundles = null;
-        dataFullyLoaded = false;
-        await fetchData([bundles]);
+        console.log(`[getBundle] UUID ${uuid} not found or is unknown, forcing re-fetch...`);
+        await getBundleList(gameVersion || bundles.version);
         lastBundleFetch = Date.now();
+        
+        let updatedBundle = bundles[uuid];
+        let isNowKnown = updatedBundle && updatedBundle.names && !updatedBundle.names["en-US"].startsWith("Unknown Bundle");
+        
+        if (isUnknown && isNowKnown) {
+            console.log("[getBundle] API updated! Bundle resolved. Refetching all cosmetics...");
+            skins = rarities = buddies = cards = sprays = titles = flexes = null;
+            dataFullyLoaded = false;
+            await fetchData();
+        }
+        
+        if (updatedBundle) bundle = updatedBundle;
     }
-    return bundles[uuid];
+    
+    return bundle;
 }
 
 export const getAllBundles = () => {
