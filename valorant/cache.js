@@ -89,7 +89,7 @@ export const getValorantVersion = async () => {
 
     versionFetchPromise = (async () => {
         console.log("Fetching current valorant version...");
-        const req = await fetch(`https://valorant-api.com/v1/version?t=${Date.now()}`);
+        const req = await fetch("https://valorant-api.com/v1/version");
         console.assert(req.statusCode === 200, `Valorant version status code is ${req.statusCode}!`, req);
         const json = JSON.parse(req.body);
         console.assert(json.status === 200, `Valorant version data status code is ${json.status}!`, json);
@@ -251,7 +251,7 @@ const _fetchDataImpl = async (types = null, checkVersion = false) => {
 export const getSkinList = async (gameVersion) => {
     console.log("Fetching valorant skin list...");
 
-    const req = await fetch(`https://valorant-api.com/v1/weapons?language=all&t=${Date.now()}`);
+    const req = await fetch("https://valorant-api.com/v1/weapons?language=all");
     console.assert(req.statusCode === 200, `Valorant skins status code is ${req.statusCode}!`, req);
 
     const json = JSON.parse(req.body);
@@ -443,86 +443,36 @@ const buildBundleItemPrices = () => {
 const getBundleList = async (gameVersion) => {
     console.log("Fetching valorant bundle list...");
 
-    const req = await fetch(`https://valorant-api.com/v1/bundles?language=all&t=${Date.now()}`);
+    const req = await fetch("https://valorant-api.com/v1/bundles?language=all");
     console.assert(req.statusCode === 200, `Valorant bundles status code is ${req.statusCode}!`, req);
 
     const json = JSON.parse(req.body);
     console.assert(json.status === 200, `Valorant bundles data status code is ${json.status}!`, json);
 
-    const oldBundles = bundles || {};
     bundles = { version: gameVersion };
-    bundleItemPrices = {}; 
-
+    bundleItemPrices = {}; // items are all null at this point; index rebuilt via addBundleData()
     for (const bundle of json.data) {
-        const existing = oldBundles[bundle.uuid];
         bundles[bundle.uuid] = {
             uuid: bundle.uuid,
             names: bundle.displayName,
             subNames: bundle.displayNameSubText,
             descriptions: bundle.extraDescription,
             icon: bundle.displayIcon,
-            items: existing ? existing.items : null,
-            price: existing ? existing.price : null,
-            basePrice: existing ? existing.basePrice : null,
-            expires: existing ? existing.expires : null,
-            last_seen: existing ? existing.last_seen : null
-        }
-
-        // Rebuild price index
-        if (bundles[bundle.uuid].items) {
-            for (const item of bundles[bundle.uuid].items) {
-                if (item.uuid && item.price) bundleItemPrices[item.uuid] = item.price;
-            }
+            items: null,
+            price: null,
+            basePrice: null,
+            expires: null,
+            last_seen: null
         }
     }
 
-    // Restore "Unknown Bundles" that aren't yet in the API
-    for (const [uuid, b] of Object.entries(oldBundles)) {
-        if (uuid !== "version" && !bundles[uuid]) {
-            bundles[uuid] = b;
-            
-            if (b.items) {
-                for (const item of b.items) {
-                    if (item.uuid && item.price) bundleItemPrices[item.uuid] = item.price;
-                }
-            }
-        }
-    }
+    // saveSkinsJSON() deferred to fetchData() caller
 }
 
 export const addBundleData = async (bundleData) => {
     await fetchData([bundles]);
 
     let bundle = bundles[bundleData.uuid];
-    let isUnknown = bundle && bundle.names && bundle.names["en-US"] && bundle.names["en-US"].startsWith("Unknown Bundle");
-
-    if ((!bundle || isUnknown) && (Date.now() - lastBundleFetch > 60 * 60 * 1000)) {
-        console.log(`[addBundleData] Bundle ${bundleData.uuid} missing or unknown. Refetching bundles...`);
-        
-        await getBundleList(gameVersion || bundles.version);
-        lastBundleFetch = Date.now();
-        
-        let updatedBundle = bundles[bundleData.uuid];
-        let isNowKnown = updatedBundle && updatedBundle.names && !updatedBundle.names["en-US"].startsWith("Unknown Bundle");
-        
-        // IF API UPDATED (RESOLVED THE UNKNOWN BUNDLE):
-        if (isUnknown && isNowKnown) {
-            dataFullyLoaded = false;
-            console.log("[getBundle] API updated! Forcing version mismatch to fetch cosmetics...");
-            if (skins) skins.version = "force_update";
-            if (rarities) rarities.version = "force_update";
-            if (buddies) buddies.version = "force_update";
-            if (cards) cards.version = "force_update";
-            if (sprays) sprays.version = "force_update";
-            if (titles) titles.version = "force_update";
-            if (flexes) flexes.version = "force_update";
-
-            await fetchData(null, true);
-        }
-        
-        if (updatedBundle) bundle = updatedBundle;
-    }
-
     if (!bundle) {
         bundle = {
             uuid: bundleData.uuid,
@@ -538,8 +488,6 @@ export const addBundleData = async (bundleData) => {
         };
         bundles[bundleData.uuid] = bundle;
         console.log(`Created skeleton for unrecognized bundle ${bundleData.uuid}`);
-    } else if (isUnknown && bundle.names && !bundle.names["en-US"].startsWith("Unknown Bundle")) {
-        console.log(`Successfully resolved unknown bundle ${bundleData.uuid}`);
     }
 
     bundle.items = bundleData.items.map(item => {
@@ -556,6 +504,7 @@ export const addBundleData = async (bundleData) => {
     bundle.basePrice = bundleData.basePrice;
     bundle.expires = bundleData.expires;
 
+    // Update inverted price index for this bundle's items
     for (const item of bundle.items) {
         if (item.uuid && item.price) bundleItemPrices[item.uuid] = item.price;
     }
@@ -591,7 +540,7 @@ const getRarities = async (gameVersion) => {
 export const getBuddies = async (gameVersion) => {
     console.log("Fetching gun buddies list...");
 
-    const req = await fetch(`https://valorant-api.com/v1/buddies?language=all&t=${Date.now()}`);
+    const req = await fetch("https://valorant-api.com/v1/buddies?language=all");
     console.assert(req.statusCode === 200, `Valorant buddies status code is ${req.statusCode}!`, req);
 
     const json = JSON.parse(req.body);
@@ -613,7 +562,7 @@ export const getBuddies = async (gameVersion) => {
 export const getFlexes = async (gameVersion) => {
     console.log("Fetching flex list...");
 
-    const req = await fetch(`https://valorant-api.com/v1/flex?language=all&t=${Date.now()}`);
+    const req = await fetch("https://valorant-api.com/v1/flex?language=all");
     console.assert(req.statusCode === 200, `Valorant flex status code is ${req.statusCode}!`, req);
 
     const json = JSON.parse(req.body);
@@ -632,7 +581,7 @@ export const getFlexes = async (gameVersion) => {
 export const getCards = async (gameVersion) => {
     console.log("Fetching player cards list...");
 
-    const req = await fetch(`https://valorant-api.com/v1/playercards?language=all&t=${Date.now()}`);
+    const req = await fetch("https://valorant-api.com/v1/playercards?language=all");
     console.assert(req.statusCode === 200, `Valorant cards status code is ${req.statusCode}!`, req);
 
     const json = JSON.parse(req.body);
@@ -657,7 +606,7 @@ export const getCards = async (gameVersion) => {
 export const getSprays = async (gameVersion) => {
     console.log("Fetching sprays list...");
 
-    const req = await fetch(`https://valorant-api.com/v1/sprays?language=all&t=${Date.now()}`);
+    const req = await fetch("https://valorant-api.com/v1/sprays?language=all");
     console.assert(req.statusCode === 200, `Valorant sprays status code is ${req.statusCode}!`, req);
 
     const json = JSON.parse(req.body);
@@ -678,7 +627,7 @@ export const getSprays = async (gameVersion) => {
 export const getTitles = async (gameVersion) => {
     console.log("Fetching player titles list...");
 
-    const req = await fetch(`https://valorant-api.com/v1/playertitles?language=all&t=${Date.now()}`);
+    const req = await fetch("https://valorant-api.com/v1/playertitles?language=all");
     console.assert(req.statusCode === 200, `Valorant titles status code is ${req.statusCode}!`, req);
 
     const json = JSON.parse(req.body);
@@ -705,14 +654,14 @@ export const fetchBattlepassInfo = async (gameVersion) => {
     // season = both act and episode. basically any "event" with a start and end date.
 
     // fetch seasons data (current act end date)
-    const req1 = await fetch(`https://valorant-api.com/v1/seasons?t=${Date.now()}`);
+    const req1 = await fetch("https://valorant-api.com/v1/seasons");
     console.assert(req1.statusCode === 200, `Valorant seasons status code is ${req1.statusCode}!`, req1);
 
     const seasons_json = JSON.parse(req1.body);
     console.assert(seasons_json.status === 200, `Valorant seasons data status code is ${seasons_json.status}!`, seasons_json);
 
     // fetch battlepass data (battlepass uuid)
-    const req2 = await fetch(`https://valorant-api.com/v1/contracts?t=${Date.now()}`);
+    const req2 = await fetch("https://valorant-api.com/v1/contracts");
     console.assert(req2.statusCode === 200, `Valorant contracts status code is ${req2.statusCode}!`, req2);
 
     const contracts_json = JSON.parse(req2.body);
@@ -841,38 +790,17 @@ export const searchSkin = async (query, locale, limit = 20, threshold = -5000) =
 
 export const getBundle = async (uuid) => {
     await fetchData([bundles]);
-    
-    let bundle = bundles[uuid];
-    let isUnknown = bundle && bundle.names && bundle.names["en-US"] && bundle.names["en-US"].startsWith("Unknown Bundle");
-
-    if (bundle && !isUnknown) return bundle;
+    if (bundles[uuid]) return bundles[uuid];
 
     if (Date.now() - lastBundleFetch > 60 * 60 * 1000) {
-        console.log(`[getBundle] UUID ${uuid} not found or is unknown, forcing re-fetch...`);
-        await getBundleList(gameVersion || bundles.version);
+        // UUID not in cache — bundle list is likely stale (new Riot bundle). Force a re-fetch.
+        console.log(`[getBundle] UUID ${uuid} not found in bundle cache, forcing re-fetch...`);
+        bundles = null;
+        dataFullyLoaded = false;
+        await fetchData([bundles]);
         lastBundleFetch = Date.now();
-        
-        let updatedBundle = bundles[uuid];
-        let isNowKnown = updatedBundle && updatedBundle.names && !updatedBundle.names["en-US"].startsWith("Unknown Bundle");
-        
-        if (isUnknown && isNowKnown) {
-            dataFullyLoaded = false;
-            console.log("[getBundle] API updated! Forcing version mismatch to fetch cosmetics...");
-            if (skins) skins.version = "force_update";
-            if (rarities) rarities.version = "force_update";
-            if (buddies) buddies.version = "force_update";
-            if (cards) cards.version = "force_update";
-            if (sprays) sprays.version = "force_update";
-            if (titles) titles.version = "force_update";
-            if (flexes) flexes.version = "force_update";
-            
-            await fetchData(null, true);
-        }
-        
-        if (updatedBundle) bundle = updatedBundle;
     }
-    
-    return bundle;
+    return bundles[uuid];
 }
 
 export const getAllBundles = () => {
