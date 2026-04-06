@@ -89,7 +89,7 @@ export const getValorantVersion = async () => {
 
     versionFetchPromise = (async () => {
         console.log("Fetching current valorant version...");
-        const req = await fetch("https://valorant-api.com/v1/version");
+        const req = await fetch(`https://valorant-api.com/v1/version?t=${Date.now()}`);
         console.assert(req.statusCode === 200, `Valorant version status code is ${req.statusCode}!`, req);
         const json = JSON.parse(req.body);
         console.assert(json.status === 200, `Valorant version data status code is ${json.status}!`, json);
@@ -251,7 +251,7 @@ const _fetchDataImpl = async (types = null, checkVersion = false) => {
 export const getSkinList = async (gameVersion) => {
     console.log("Fetching valorant skin list...");
 
-    const req = await fetch("https://valorant-api.com/v1/weapons?language=all");
+    const req = await fetch(`https://valorant-api.com/v1/weapons?language=all&t=${Date.now()}`);
     console.assert(req.statusCode === 200, `Valorant skins status code is ${req.statusCode}!`, req);
 
     const json = JSON.parse(req.body);
@@ -443,7 +443,7 @@ const buildBundleItemPrices = () => {
 const getBundleList = async (gameVersion) => {
     console.log("Fetching valorant bundle list...");
 
-    const req = await fetch("https://valorant-api.com/v1/bundles?language=all");
+    const req = await fetch(`https://valorant-api.com/v1/bundles?language=all&t=${Date.now()}`);
     console.assert(req.statusCode === 200, `Valorant bundles status code is ${req.statusCode}!`, req);
 
     const json = JSON.parse(req.body);
@@ -584,7 +584,7 @@ const getRarities = async (gameVersion) => {
 export const getBuddies = async (gameVersion) => {
     console.log("Fetching gun buddies list...");
 
-    const req = await fetch("https://valorant-api.com/v1/buddies?language=all");
+    const req = await fetch(`https://valorant-api.com/v1/buddies?language=all&t=${Date.now()}`);
     console.assert(req.statusCode === 200, `Valorant buddies status code is ${req.statusCode}!`, req);
 
     const json = JSON.parse(req.body);
@@ -606,7 +606,7 @@ export const getBuddies = async (gameVersion) => {
 export const getFlexes = async (gameVersion) => {
     console.log("Fetching flex list...");
 
-    const req = await fetch("https://valorant-api.com/v1/flex?language=all");
+    const req = await fetch(`https://valorant-api.com/v1/flex?language=all&t=${Date.now()}`);
     console.assert(req.statusCode === 200, `Valorant flex status code is ${req.statusCode}!`, req);
 
     const json = JSON.parse(req.body);
@@ -625,7 +625,7 @@ export const getFlexes = async (gameVersion) => {
 export const getCards = async (gameVersion) => {
     console.log("Fetching player cards list...");
 
-    const req = await fetch("https://valorant-api.com/v1/playercards?language=all");
+    const req = await fetch(`https://valorant-api.com/v1/playercards?language=all&t=${Date.now()}`);
     console.assert(req.statusCode === 200, `Valorant cards status code is ${req.statusCode}!`, req);
 
     const json = JSON.parse(req.body);
@@ -650,7 +650,7 @@ export const getCards = async (gameVersion) => {
 export const getSprays = async (gameVersion) => {
     console.log("Fetching sprays list...");
 
-    const req = await fetch("https://valorant-api.com/v1/sprays?language=all");
+    const req = await fetch(`https://valorant-api.com/v1/sprays?language=all&t=${Date.now()}`);
     console.assert(req.statusCode === 200, `Valorant sprays status code is ${req.statusCode}!`, req);
 
     const json = JSON.parse(req.body);
@@ -671,7 +671,7 @@ export const getSprays = async (gameVersion) => {
 export const getTitles = async (gameVersion) => {
     console.log("Fetching player titles list...");
 
-    const req = await fetch("https://valorant-api.com/v1/playertitles?language=all");
+    const req = await fetch(`https://valorant-api.com/v1/playertitles?language=all&t=${Date.now()}`);
     console.assert(req.statusCode === 200, `Valorant titles status code is ${req.statusCode}!`, req);
 
     const json = JSON.parse(req.body);
@@ -698,14 +698,14 @@ export const fetchBattlepassInfo = async (gameVersion) => {
     // season = both act and episode. basically any "event" with a start and end date.
 
     // fetch seasons data (current act end date)
-    const req1 = await fetch("https://valorant-api.com/v1/seasons");
+    const req1 = await fetch(`https://valorant-api.com/v1/seasons?t=${Date.now()}`);
     console.assert(req1.statusCode === 200, `Valorant seasons status code is ${req1.statusCode}!`, req1);
 
     const seasons_json = JSON.parse(req1.body);
     console.assert(seasons_json.status === 200, `Valorant seasons data status code is ${seasons_json.status}!`, seasons_json);
 
     // fetch battlepass data (battlepass uuid)
-    const req2 = await fetch("https://valorant-api.com/v1/contracts");
+    const req2 = await fetch(`https://valorant-api.com/v1/contracts?t=${Date.now()}`);
     console.assert(req2.statusCode === 200, `Valorant contracts status code is ${req2.statusCode}!`, req2);
 
     const contracts_json = JSON.parse(req2.body);
