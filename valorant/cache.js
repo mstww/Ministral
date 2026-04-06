@@ -507,9 +507,15 @@ export const addBundleData = async (bundleData) => {
         
         // IF API UPDATED (RESOLVED THE UNKNOWN BUNDLE):
         if (isUnknown && isNowKnown) {
-            console.log("[addBundleData] API updated! Bundle resolved. Refetching all cosmetics (buddies, cards, flexes, etc.)...");
-            skins = rarities = buddies = cards = sprays = titles = flexes = null;
-            dataFullyLoaded = false;
+            console.log("[getBundle] API updated! Forcing version mismatch to fetch cosmetics...");
+            if (skins) skins.version = "force_update";
+            if (rarities) rarities.version = "force_update";
+            if (buddies) buddies.version = "force_update";
+            if (cards) cards.version = "force_update";
+            if (sprays) sprays.version = "force_update";
+            if (titles) titles.version = "force_update";
+            if (flexes) flexes.version = "force_update";
+
             await fetchData();
         }
         
@@ -849,9 +855,15 @@ export const getBundle = async (uuid) => {
         let isNowKnown = updatedBundle && updatedBundle.names && !updatedBundle.names["en-US"].startsWith("Unknown Bundle");
         
         if (isUnknown && isNowKnown) {
-            console.log("[getBundle] API updated! Bundle resolved. Refetching all cosmetics...");
-            skins = rarities = buddies = cards = sprays = titles = flexes = null;
-            dataFullyLoaded = false;
+            console.log("[getBundle] API updated! Forcing version mismatch to fetch cosmetics...");
+            if (skins) skins.version = "force_update";
+            if (rarities) rarities.version = "force_update";
+            if (buddies) buddies.version = "force_update";
+            if (cards) cards.version = "force_update";
+            if (sprays) sprays.version = "force_update";
+            if (titles) titles.version = "force_update";
+            if (flexes) flexes.version = "force_update";
+            
             await fetchData();
         }
         
